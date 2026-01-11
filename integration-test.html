@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Saga Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { display: flex; gap: 20px; }
+        .box { border: 1px solid #ccc; padding: 20px; width: 45%; }
+        #logs { background: #f0f0f0; padding: 10px; height: 300px; overflow-y: scroll; border: 1px solid #999; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Saga Transaction Integration Test</h1>
+    
+    <div class="container">
+        <!-- Control Panel -->
+        <div class="box">
+            <h3>1. Initiate Transaction</h3>
+            <div style="margin-bottom: 10px;">
+                <label>Business ID: <input type="text" id="businessId" value="BIZ-001"></label>
+                <button onclick="startTransaction()">Start Saga</button>
+            </div>
+
+            <h3>2. Query Transaction</h3>
+            <div style="margin-bottom: 10px;">
+                <label>Transaction ID: <input type="text" id="queryTxId" placeholder="Waiting for init..."></label>
+                <button onclick="queryTransaction()">Get Details</button>
+            </div>
+            <div id="queryResult" style="white-space: pre-wrap; background: #eef; padding: 10px; margin-top: 10px;"></div>
+        </div>
+
+        <!-- Real-time Logs -->
+        <div class="box">
+            <h3>3. Real-time Notification (WebSocket)</h3>
+            <div id="status">Connecting...</div>
+            <ul id="logs"></ul>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket Setup
+        const ws = new WebSocket("ws://localhost:5006/ws");
+        const statusDiv = document.getElementById("status");
+        const logsList = document.getElementById("logs");
+
+        ws.onopen = () => {
+            statusDiv.innerText = "Connected to WebSocket (ws://localhost:5006/ws)";
+            statusDiv.classList.add("success");
+            addLog("System", "WebSocket Connected");
+        };
+
+        ws.onclose = () => {
+            statusDiv.innerText = "Disconnected";
+            statusDiv.classList.add("error");
+            addLog("System", "WebSocket Disconnected");
+        };
+
+        ws.onmessage = (event) => {
+            console.log("WS Message:", event.data);
+            try {
+                const msg = JSON.parse(event.data);
+                addLog(msg.ServiceName || "System", `${msg.Status}: ${msg.Message} (Tx: ${msg.TransactionId})`);
+                
+                // Auto-fill query input if it's a new transaction
+                if (document.getElementById("queryTxId").value === "") {
+                    document.getElementById("queryTxId").value = msg.TransactionId;
+                }
+            } catch (e) {
+                addLog("Raw", event.data);
+            }
+        };
+
+        function addLog(source, message) {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${new Date().toLocaleTimeString()} [${source}]</strong>: ${message}`;
+            logsList.insertBefore(li, logsList.firstChild);
+        }
+
+        // API Functions
+        async function startTransaction() {
+            const businessId = document.getElementById("businessId").value;
+            const payload = { Amount: 100, Item: "TestItem" };
+
+            try {
+                const response = await fetch("http://localhost:5001/api/saga/init", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ businessId, payload })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    addLog("Client", `Transaction Initiated: ${data.transactionId}`);
+                    document.getElementById("queryTxId").value = data.transactionId;
+                } else {
+                    addLog("Client", `Error: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                addLog("Client", `Network Error: ${error.message}`);
+            }
+        }
+
+        async function queryTransaction() {
+            const txId = document.getElementById("queryTxId").value;
+            if (!txId) return alert("Enter Transaction ID");
+
+            try {
+                const response = await fetch(`http://localhost:5005/api/query/transaction/${txId}`);
+                const result = await response.json();
+                document.getElementById("queryResult").innerText = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById("queryResult").innerText = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

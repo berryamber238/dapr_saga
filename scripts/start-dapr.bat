@@ -1,0 +1,6 @@
+start dapr run --app-id saga-coordinator --app-port 5001 --dapr-http-port 3501 --resources-path ./components -- dotnet run --project src/Saga.Coordinator/Saga.Coordinator.csproj --urls=http://localhost:5001
+start dapr run --app-id service-cta --app-port 5002 --dapr-http-port 3502 --resources-path ./components -- dotnet run --project src/Service.CTA/Service.CTA.csproj --urls=http://localhost:5002
+start dapr run --app-id service-genesis --app-port 5003 --dapr-http-port 3503 --resources-path ./components -- dotnet run --project src/Service.Genesis/Service.Genesis.csproj --urls=http://localhost:5003
+start dapr run --app-id service-perfectcage --app-port 5004 --dapr-http-port 3504 --resources-path ./components -- dotnet run --project src/Service.PerfectCage/Service.PerfectCage.csproj --urls=http://localhost:5004
+start dapr run --app-id service-query --app-port 5005 --dapr-http-port 3505 --resources-path ./components -- dotnet run --project src/Service.Query/Service.Query.csproj --urls=http://localhost:5005
+start dapr run --app-id service-notification --app-port 5006 --dapr-http-port 3506 --resources-path ./components -- dotnet run --project src/Service.Notification/Service.Notification.csproj --urls=http://localhost:5006

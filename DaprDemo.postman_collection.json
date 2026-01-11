@@ -1,0 +1,126 @@
+{
+	"info": {
+		"_postman_id": "dapr-demo-saga",
+		"name": "Dapr Saga Demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Init Saga Transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"businessId\": \"BIZ-{{$randomInt}}\",\n    \"payload\": {\n        \"amount\": 1000,\n        \"currency\": \"USD\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/saga/init",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"saga",
+						"init"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Query Transaction Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5005/api/query/transaction/{{transactionId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5005",
+					"path": [
+						"api",
+						"query",
+						"transaction",
+						"{{transactionId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Search Transactions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5005/api/query/search?status=Success&page=1&pageSize=10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5005",
+					"path": [
+						"api",
+						"query",
+						"search"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "Success"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "pageSize",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Direct Service Call (Simulate Failure)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"transactionId\": \"FORCE-FAIL-TEST\",\n    \"businessId\": \"FAIL-001\",\n    \"payload\": {}\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5002/api/cta/transaction",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5002",
+					"path": [
+						"api",
+						"cta",
+						"transaction"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
