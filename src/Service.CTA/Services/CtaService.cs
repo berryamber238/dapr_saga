@@ -1,6 +1,7 @@
 using Dapr.Client;
 using DaprDemo.Shared.Models;
 using DaprDemo.Shared.Repositories;
+using MongoDB.Driver;
 using Serilog;
 
 namespace Service.CTA.Services;
@@ -16,20 +17,27 @@ public class CtaService : ICtaService
     private readonly DaprClient _daprClient;
     private readonly BusinessDataRepository _businessRepo;
     private readonly CompensateLogRepository _compensateRepo;
+    private readonly IMongoClient _mongoClient;
+    private readonly EventStoreRepository _eventStore;
     private const string PUBSUB_NAME = "pubsub";
     private const string TOPIC_NAME = "saga-status";
     private const string SERVICE_NAME = "Service.CTA";
 
-    public CtaService(DaprClient daprClient, BusinessDataRepository businessRepo, CompensateLogRepository compensateRepo)
+    public CtaService(DaprClient daprClient, BusinessDataRepository businessRepo, CompensateLogRepository compensateRepo, IMongoClient mongoClient, EventStoreRepository eventStore)
     {
         _daprClient = daprClient;
         _businessRepo = businessRepo;
         _compensateRepo = compensateRepo;
+        _mongoClient = mongoClient;
+        _eventStore = eventStore;
     }
 
     public async Task<bool> ProcessTransactionAsync(string transactionId, string businessId, object payload)
     {
         Log.Information($"[CTA] Processing transaction {transactionId}");
+        using var session = await _mongoClient.StartSessionAsync();
+        session.StartTransaction();
+
         try
         {
             await Task.Delay(500); // Simulate work
@@ -52,15 +60,19 @@ public class CtaService : ICtaService
                 CreateTime = DateTime.UtcNow,
                 UpdateTime = DateTime.UtcNow
             };
-            await _businessRepo.CreateAsync(data);
+            await _businessRepo.CreateAsync(session, data);
 
-            await PublishEventAsync(transactionId, "Success", "CTA processed");
+            // Save to Outbox
+            await SaveOutboxEventAsync(session, transactionId, "Success", "CTA processed");
+
+            await session.CommitTransactionAsync();
             return true;
         }
         catch (Exception ex)
         {
+            await session.AbortTransactionAsync();
             Log.Error(ex, $"[CTA] Error processing {transactionId}");
-            await PublishEventAsync(transactionId, "Failed", ex.Message);
+            // Optional: Try to save failure event in a separate transaction
             return false;
         }
     }
@@ -68,6 +80,9 @@ public class CtaService : ICtaService
     public async Task<bool> CompensateTransactionAsync(string transactionId)
     {
         Log.Information($"[CTA] Compensating transaction {transactionId}");
+        using var session = await _mongoClient.StartSessionAsync();
+        session.StartTransaction();
+
         try
         {
             await Task.Delay(300);
@@ -81,7 +96,7 @@ public class CtaService : ICtaService
                 Result = "Success",
                 Message = "Compensated successfully"
             };
-            await _compensateRepo.CreateAsync(log);
+            await _compensateRepo.CreateAsync(session, log);
 
             // Update Business Data Status
             var data = await _businessRepo.GetAsync(x => x.TransactionId == transactionId && x.ServiceName == SERVICE_NAME);
@@ -89,20 +104,24 @@ public class CtaService : ICtaService
             {
                 data.Status = "Compensated";
                 data.UpdateTime = DateTime.UtcNow;
-                await _businessRepo.UpdateAsync(x => x.Id == data.Id, data);
+                await _businessRepo.UpdateAsync(session, x => x.Id == data.Id, data);
             }
 
-            await PublishEventAsync(transactionId, "Compensated", "CTA compensated");
+            // Save to Outbox
+            await SaveOutboxEventAsync(session, transactionId, "Compensated", "CTA compensated");
+
+            await session.CommitTransactionAsync();
             return true;
         }
         catch (Exception ex)
         {
+            await session.AbortTransactionAsync();
             Log.Error(ex, $"[CTA] Error compensating {transactionId}");
             return false;
         }
     }
 
-    private async Task PublishEventAsync(string txId, string status, string message)
+    private async Task SaveOutboxEventAsync(IClientSessionHandle session, string txId, string status, string message)
     {
         var evt = new 
         {
@@ -112,6 +131,15 @@ public class CtaService : ICtaService
             Message = message,
             Timestamp = DateTime.UtcNow
         };
-        await _daprClient.PublishEventAsync(PUBSUB_NAME, TOPIC_NAME, evt);
+
+        var outbox = new OutboxMessage
+        {
+            Topic = TOPIC_NAME,
+            Payload = evt,
+            Status = "Pending",
+            CreateTime = DateTime.UtcNow
+        };
+
+        await _eventStore.CreateOutboxAsync(session, outbox);
     }
 }

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saga Test Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <!-- Header -->
+        <header class="bg-white rounded-lg shadow p-6">
+            <h1 class="text-3xl font-bold text-gray-800">Saga Test Console</h1>
+            <p class="text-gray-600 mt-2">Create and monitor Saga transactions</p>
+        </header>
+
+        <!-- Create Event Section -->
+        <section class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-600">1. Trigger Buy-In Event</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Business ID</label>
+                    <input type="text" id="businessId" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="BIZ-001">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                    <input type="text" id="product" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" value="DaprBook">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Order Amount</label>
+                    <input type="number" id="amount" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" value="100">
+                </div>
+            </div>
+            <div class="mt-4">
+                <button onclick="triggerSaga(event)" id="createBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors flex items-center">
+                    <span>Create Saga Transaction</span>
+                </button>
+            </div>
+            <div id="createResult" class="mt-4 hidden p-4 bg-green-50 text-green-700 rounded border border-green-200"></div>
+        </section>
+
+        <!-- Query Section -->
+        <section class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4 text-purple-600">2. Transaction Status</h2>
+            <div class="flex gap-4 mb-4">
+                <input type="text" id="queryTxId" class="flex-1 border rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Enter Transaction ID">
+                <button onclick="queryStatus()" class="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 transition-colors">
+                    Refresh Status
+                </button>
+            </div>
+            
+            <!-- Auto-refresh toggle -->
+            <div class="flex items-center gap-2 mb-4">
+                <input type="checkbox" id="autoRefresh" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500" onchange="toggleAutoRefresh()">
+                <label for="autoRefresh" class="text-sm text-gray-600">Auto-refresh every 2s</label>
+            </div>
+
+            <!-- Status Display -->
+            <div id="statusDisplay" class="hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <span class="text-xs text-gray-500 uppercase">Status</span>
+                        <div id="sagaStatus" class="text-lg font-bold mt-1">Pending</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <span class="text-xs text-gray-500 uppercase">Current Step</span>
+                        <div id="sagaStep" class="text-lg font-bold mt-1">-</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <span class="text-xs text-gray-500 uppercase">Start Time</span>
+                        <div id="sagaTime" class="text-lg font-bold mt-1">-</div>
+                    </div>
+                </div>
+
+                <!-- Raw JSON -->
+                <div class="mt-4">
+                    <span class="text-xs text-gray-500 uppercase block mb-2">Detailed Response</span>
+                    <pre id="jsonOutput" class="bg-gray-900 text-green-400 p-4 rounded overflow-x-auto text-sm font-mono h-64"></pre>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Changed API to use the new "Trigger via EventStore" endpoint
+        const TRIGGER_API = 'http://localhost:5001/api/test/trigger-via-eventstore';
+        const COORDINATOR_API = 'http://localhost:5001/api/saga'; // Still needed for fallback query
+        const QUERY_API = 'http://localhost:5005/api/query';
+        let refreshInterval;
+
+        // Init random business ID
+        document.getElementById('businessId').value = 'BIZ-' + Math.floor(Math.random() * 10000);
+
+        async function triggerSaga(e) {
+            if (e) e.preventDefault();
+            const btn = document.getElementById('createBtn');
+            const resultDiv = document.getElementById('createResult');
+            
+            try {
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+                
+                const payload = {
+                    businessId: document.getElementById('businessId').value,
+                    payload: {
+                        product: document.getElementById('product').value,
+                        orderAmount: parseInt(document.getElementById('amount').value)
+                    }
+                };
+
+                // Call the new Trigger API
+                const response = await axios.post(TRIGGER_API, payload);
+                
+                resultDiv.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200');
+                resultDiv.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+                resultDiv.innerHTML = `
+                    <strong>Success!</strong> Event Queued in EventStore/Outbox.<br>
+                    Transaction ID: <span class="font-mono">${response.data.transactionId}</span><br>
+                    <span class="text-sm text-gray-600">Waiting for Worker to pick up...</span>
+                `;
+
+                // Auto-fill query input and start polling
+                document.getElementById('queryTxId').value = response.data.transactionId;
+                document.getElementById('autoRefresh').checked = true;
+                toggleAutoRefresh();
+                
+                // Regenerate Business ID for next use
+                document.getElementById('businessId').value = 'BIZ-' + Math.floor(Math.random() * 10000);
+
+            } catch (error) {
+                resultDiv.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border-green-200');
+                resultDiv.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        }
+
+        async function queryStatus() {
+            const txId = document.getElementById('queryTxId').value.trim();
+            if (!txId) return;
+
+            const display = document.getElementById('statusDisplay');
+            
+            try {
+                // Try Query Service first for details, fallback to Coordinator if needed
+                let data;
+                try {
+                    const response = await axios.get(`${QUERY_API}/transaction/${txId}`);
+                    data = response.data.data;
+                } catch (e) {
+                    console.log('Query service failed, trying coordinator directly...');
+                    const response = await axios.get(`${COORDINATOR_API}/${txId}`);
+                    data = response.data;
+                }
+
+                display.classList.remove('hidden');
+                
+                // Update UI fields
+                const status = data.status || data.Status || 'Unknown';
+                const statusEl = document.getElementById('sagaStatus');
+                statusEl.textContent = status;
+                
+                // Color code status
+                statusEl.className = 'text-lg font-bold mt-1 ' + 
+                    (status === 'Completed' ? 'text-green-600' : 
+                     status === 'Failed' || status === 'Compensated' ? 'text-red-600' : 'text-blue-600');
+
+                document.getElementById('sagaStep').textContent = data.currentStep || data.CurrentStep || '-';
+                document.getElementById('sagaTime').textContent = new Date(data.startTime || data.StartTime).toLocaleString();
+                document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+
+                // Stop auto-refresh if terminal state reached
+                if (['Completed', 'Failed', 'Compensated'].includes(status)) {
+                    if (document.getElementById('autoRefresh').checked) {
+                        document.getElementById('autoRefresh').checked = false;
+                        toggleAutoRefresh();
+                    }
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function toggleAutoRefresh() {
+            const shouldRefresh = document.getElementById('autoRefresh').checked;
+            if (shouldRefresh) {
+                queryStatus(); // Immediate update
+                refreshInterval = setInterval(queryStatus, 2000);
+            } else {
+                clearInterval(refreshInterval);
+            }
+        }
+    </script>
+</body>
+</html>

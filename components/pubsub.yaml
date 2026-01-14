@@ -1,14 +1,40 @@
+# Dapr API版本
 apiVersion: dapr.io/v1alpha1
+# 资源类型，这里是Dapr组件
 kind: Component
+# 组件元数据
 metadata:
+  # 组件名称，用于在代码中引用
   name: pubsub
+# 组件规格
 spec:
-  type: pubsub.kafka
+  # 组件类型，这里使用RabbitMQ作为消息队列
+  type: pubsub.rabbitmq
+  # 组件版本
   version: v1
+  # 组件元数据，用于配置RabbitMQ连接
   metadata:
-  - name: brokers
-    value: "kafka:29092"
-  - name: consumerGroup
-    value: "dapr-demo-group"
-  - name: authType
-    value: "none"
+    # RabbitMQ的连接字符串
+    # 格式为 amqp://user:password@host:port
+    - name: connectionString
+      value: "amqp://guest:guest@rabbitmq:5672"
+    # 是否持久化队列和消息
+    # "true" 表示交换机和队列将被创建为持久化的
+    - name: durable
+      value: "true"
+    # 当没有消费者时是否删除队列
+    # "false" 表示队列在没有消费者时不会被自动删除
+    - name: deletedWhenUnused
+      value: "false"
+    # 是否自动确认消息
+    # "false" 表示需要手动确认消息，以保证消息至少被成功处理一次
+    - name: autoAck
+      value: "false"
+    # 消息投递模式
+    # "2" 表示消息是持久化的
+    - name: deliveryMode
+      value: "2"
+    # 处理失败时是否重新入队
+    # "true" 表示如果消费失败，消息会重新回到队列中
+    - name: requeueInFailure
+      value: "true"

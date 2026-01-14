@@ -19,14 +19,12 @@ public class MongoBaseRepository<T> : IRepository<T> where T : class
     protected readonly IMongoCollection<T> _collection;
     protected readonly DaprClient _daprClient;
 
-    public MongoBaseRepository(IConfiguration configuration, string collectionName, DaprClient daprClient)
+    public MongoBaseRepository(IMongoClient mongoClient, IConfiguration configuration, string collectionName, DaprClient daprClient)
     {
         _daprClient = daprClient;
-        var connectionString = configuration["MongoDB:ConnectionString"];
         var databaseName = configuration["MongoDB:DatabaseName"];
         
-        var client = new MongoClient(connectionString);
-        var database = client.GetDatabase(databaseName);
+        var database = mongoClient.GetDatabase(databaseName);
         _collection = database.GetCollection<T>(collectionName);
     }
 
@@ -45,9 +43,19 @@ public class MongoBaseRepository<T> : IRepository<T> where T : class
         await _collection.InsertOneAsync(entity);
     }
 
+    public async Task CreateAsync(IClientSessionHandle session, T entity)
+    {
+        await _collection.InsertOneAsync(session, entity);
+    }
+
     public async Task UpdateAsync(Expression<Func<T, bool>> predicate, T entity)
     {
         await _collection.ReplaceOneAsync(predicate, entity);
+    }
+
+    public async Task UpdateAsync(IClientSessionHandle session, Expression<Func<T, bool>> predicate, T entity)
+    {
+        await _collection.ReplaceOneAsync(session, predicate, entity);
     }
 
     public async Task DeleteAsync(Expression<Func<T, bool>> predicate)

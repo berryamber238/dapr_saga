@@ -31,36 +31,29 @@ services:
   mongodb:
     image: mongo:latest
     container_name: dapr_mongodb
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: test $$(echo "rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}).ok || rs.status().ok" | mongosh --port 27017 --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
     networks:
       - dapr-network
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: dapr_zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - dapr-network
-
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: dapr_kafka
-    depends_on:
-      - zookeeper
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: dapr_rabbitmq
     ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - dapr-network
 
@@ -80,10 +73,15 @@ services:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=DaprDemoDB
     depends_on:
-      - mongodb
-      - kafka
-      - placement
-      - scheduler
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      scheduler:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: always
     networks:
       - dapr-network
 
@@ -104,6 +102,7 @@ services:
     depends_on:
       - saga-coordinator
     network_mode: "service:saga-coordinator"
+    restart: always
 
   # 2. Service CTA
   service-cta:
@@ -117,9 +116,13 @@ services:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=DaprDemoDB
     depends_on:
-      - mongodb
-      - kafka
-      - placement
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: always
     networks:
       - dapr-network
 
@@ -151,9 +154,13 @@ services:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=DaprDemoDB
     depends_on:
-      - mongodb
-      - kafka
-      - placement
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: always
     networks:
       - dapr-network
 
@@ -185,9 +192,13 @@ services:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=DaprDemoDB
     depends_on:
-      - mongodb
-      - kafka
-      - placement
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: always
     networks:
       - dapr-network
 
@@ -219,9 +230,13 @@ services:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=DaprDemoDB
     depends_on:
-      - mongodb
-      - kafka
-      - placement
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: always
     networks:
       - dapr-network
 
@@ -253,9 +268,13 @@ services:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=DaprDemoDB
     depends_on:
-      - mongodb
-      - kafka
-      - placement
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: always
     networks:
       - dapr-network
 
@@ -274,6 +293,40 @@ services:
     depends_on:
       - service-notification
     network_mode: "service:service-notification"
+
+  # 7. Service OutboxWorker
+  service-outbox-worker:
+    build:
+      context: .
+      dockerfile: src/Service.OutboxWorker/Dockerfile
+    environment:
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=DaprDemoDB
+    depends_on:
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: always
+    networks:
+      - dapr-network
+
+  service-outbox-worker-dapr:
+    image: daprio/daprd:1.16.5
+    command: ["./daprd", 
+      "-app-id", "service-outbox-worker", 
+      "-placement-host-address", "placement:50005", 
+      "-components-path", "/components",
+      "-config", "/components/configuration.yaml"
+    ]
+    volumes:
+      - ./docker-components/:/components
+    depends_on:
+      - service-outbox-worker
+    network_mode: "service:service-outbox-worker"
+    restart: always
 
 networks:
   dapr-network:

@@ -1,4 +1,5 @@
 using DaprDemo.Shared.Repositories;
+using MongoDB.Driver;
 using Service.Genesis.Services;
 using Serilog;
 
@@ -13,7 +14,14 @@ builder.Services.AddControllers().AddDapr();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton<IMongoClient>(sp => 
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new MongoClient(config["MongoDB:ConnectionString"]);
+});
+
 builder.Services.AddScoped<BusinessDataRepository>();
+builder.Services.AddScoped<EventStoreRepository>();
 builder.Services.AddScoped<CompensateLogRepository>();
 builder.Services.AddScoped<IGenesisService, GenesisService>();
 

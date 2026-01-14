@@ -2,6 +2,7 @@ using Dapr.Client;
 using DaprDemo.Shared.Models;
 using DaprDemo.Shared.Repositories;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using Saga.Coordinator.Configuration;
 using Serilog;
 
@@ -34,7 +35,8 @@ public class SagaOrchestrator : ISagaOrchestrator
 
     public async Task<string> InitSagaAsync(TransactionRequest request)
     {
-        var txId = Guid.NewGuid().ToString();
+        // Use provided ID if available, otherwise generate new
+        var txId = string.IsNullOrEmpty(request.TransactionId) ? Guid.NewGuid().ToString() : request.TransactionId;
         Log.Information($"[Coordinator] Initializing Saga {txId}");
 
         // 1. Save Initial State to MongoDB
@@ -168,6 +170,7 @@ public class SagaOrchestrator : ISagaOrchestrator
 
 public class TransactionRequest
 {
+    public string TransactionId { get; set; } = string.Empty;
     public string BusinessId { get; set; } = string.Empty;
     public object Payload { get; set; } = new();
 }

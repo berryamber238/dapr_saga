@@ -1,4 +1,5 @@
 using DaprDemo.Shared.Repositories;
+using MongoDB.Driver;
 using Service.Query.Services;
 using Serilog;
 
@@ -28,6 +29,11 @@ builder.Services.AddCors(options =>
 });
 
 // Register Repositories
+builder.Services.AddSingleton<IMongoClient>(sp => 
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new MongoClient(config["MongoDB:ConnectionString"]);
+});
 builder.Services.AddScoped<SagaTransactionRepository>();
 builder.Services.AddScoped<BusinessDataRepository>();
 builder.Services.AddScoped<CompensateLogRepository>();

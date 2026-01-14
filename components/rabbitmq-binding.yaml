@@ -1,0 +1,18 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: rabbitmq-binding
+spec:
+  type: bindings.rabbitmq
+  version: v1
+  metadata:
+  - name: queueName
+    value: "outbox-queue"
+  - name: exchangeName
+    value: "outbox-exchange"
+  - name: host
+    value: "amqp://guest:guest@rabbitmq:5672"
+  - name: durable
+    value: "true"
+  - name: deleteWhenUnused
+    value: "false"

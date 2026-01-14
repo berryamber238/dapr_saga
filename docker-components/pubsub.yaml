@@ -3,12 +3,18 @@ kind: Component
 metadata:
   name: pubsub
 spec:
-  type: pubsub.kafka
+  type: pubsub.rabbitmq
   version: v1
   metadata:
-  - name: brokers
-    value: "kafka:29092"
-  - name: consumerGroup
-    value: "dapr-demo-group"
-  - name: authType
-    value: "none"
+  - name: connectionString
+    value: "amqp://guest:guest@rabbitmq:5672"
+  - name: durable
+    value: "true"
+  - name: deletedWhenUnused
+    value: "false"
+  - name: autoAck
+    value: "false"
+  - name: deliveryMode
+    value: "2"
+  - name: requeueInFailure
+    value: "true"

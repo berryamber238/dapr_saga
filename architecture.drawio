@@ -1,0 +1,234 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.10">
+  <diagram id="diagram-1" name="Architecture">
+    <mxGraphModel dx="1467" dy="922" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="group_main" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;" value="MSSQL Report" vertex="1">
+          <mxGeometry height="900" width="860" x="250" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="label_mongo_report" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="MongoDB Report" vertex="1">
+          <mxGeometry height="30" width="100" x="260" y="512" as="geometry" />
+        </mxCell>
+        <mxCell id="buy_in" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Buy-In Event Write" vertex="1">
+          <mxGeometry height="60" width="120" x="40" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="cash_out" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" value="Cash Out Event Write" vertex="1">
+          <mxGeometry height="60" width="120" x="40" y="662" as="geometry" />
+        </mxCell>
+        <mxCell id="vas_event" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" value="VAS Event Write" vertex="1">
+          <mxGeometry height="60" width="120" x="40" y="772" as="geometry" />
+        </mxCell>
+        <mxCell id="health" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;" value="Health Monitoring" vertex="1">
+          <mxGeometry height="60" width="100" x="300" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="dapr_saga" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Dapr + SAGA pattern in C#" vertex="1">
+          <mxGeometry height="60" width="120" x="400" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="sql_server" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;" value="SQL Server (Result Set)" vertex="1">
+          <mxGeometry height="80" width="80" x="920" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="kafka" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Rabbit MQ" vertex="1">
+          <mxGeometry height="80" width="80" x="620" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="event_col" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;" value="Event Collection" vertex="1">
+          <mxGeometry height="80" width="80" x="300" y="652" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_col" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;" value="OutBox Collection" vertex="1">
+          <mxGeometry height="80" width="80" x="440" y="652" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox_worker" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Outbox Worker" vertex="1">
+          <mxGeometry height="52" width="100" x="430" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-9" edge="1" parent="1" source="resync" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;" target="kafka">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="852" />
+              <mxPoint x="580" y="641" />
+              <mxPoint x="660" y="641" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-10" connectable="0" parent="POtwoep_TA7_t_sbpA7k-9" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Create Resync task" vertex="1">
+          <mxGeometry relative="1" x="0.4246" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="resync" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Resync Services" vertex="1">
+          <mxGeometry height="60" width="100" x="430" y="852" as="geometry" />
+        </mxCell>
+        <mxCell id="dapr_sched" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Dapr Scheduled Task" vertex="1">
+          <mxGeometry height="60" width="100" x="590" y="852" as="geometry" />
+        </mxCell>
+        <mxCell id="consumer_worker_mongo" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Consumer Worker" vertex="1">
+          <mxGeometry height="60" width="100" x="740" y="542" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-3" edge="1" parent="1" source="query_col" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="cage_query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-4" edge="1" parent="1" source="query_col" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="gcm_query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-5" edge="1" parent="1" source="query_col" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="genesis_query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="query_col" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;" value="Query Collection" vertex="1">
+          <mxGeometry height="80" width="80" x="750" y="652" as="geometry" />
+        </mxCell>
+        <mxCell id="mongo_table" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="MongoDB Table Engine" vertex="1">
+          <mxGeometry height="60" width="100" x="950" y="662" as="geometry" />
+        </mxCell>
+        <mxCell id="cage_query" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Cage Query Services" vertex="1">
+          <mxGeometry height="60" width="100" x="950" y="752" as="geometry" />
+        </mxCell>
+        <mxCell id="gcm_query" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;" value="GCM Query Services" vertex="1">
+          <mxGeometry height="60" width="100" x="950" y="832" as="geometry" />
+        </mxCell>
+        <mxCell id="genesis_query" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;" value="Genesis Query Services" vertex="1">
+          <mxGeometry height="60" width="100" x="950" y="912" as="geometry" />
+        </mxCell>
+        <mxCell id="ssrs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Reporting/Data Warehouse (SSRS)" vertex="1">
+          <mxGeometry height="60" width="180" x="1170" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="clickhouse" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="ClickHouse" vertex="1">
+          <mxGeometry height="60" width="100" x="1170" y="662" as="geometry" />
+        </mxCell>
+        <mxCell id="bi_tools" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="BI Tools" vertex="1">
+          <mxGeometry height="60" width="80" x="1310" y="662" as="geometry" />
+        </mxCell>
+        <mxCell id="downstream_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Downstream API" vertex="1">
+          <mxGeometry height="60" width="100" x="1170" y="832" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="buy_in" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="event_col" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="cash_out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="event_col" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="vas_event" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="event_col" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="802" />
+              <mxPoint x="230" y="692" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="health" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="dapr_saga" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="dapr_saga" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="sql_server" value="Generate transaction result in Saga task">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="sql_server" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="ssrs" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="event_col" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="outbox_col" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="outbox_worker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="outbox_col" value="Check Outbox Status">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="kafka" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="consumer_worker_mongo" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="consumer_worker_mongo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="query_col" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="query_col" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="mongo_table" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="mongo_table" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="clickhouse" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="clickhouse" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="bi_tools" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="cage_query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="downstream_api" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="gcm_query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" target="downstream_api" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="1" source="genesis_query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" target="downstream_api" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="1" source="dapr_sched" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="resync" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" edge="1" parent="1" source="resync" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="outbox_col" value="Check for timed-out or dead tasks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="note1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="Output summary and query collection format" vertex="1">
+          <mxGeometry height="40" width="150" x="500" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="en1" edge="1" parent="1" source="note1" style="endArrow=none;html=1;dashed=1;" target="dapr_saga" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="note2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" value="Huge development effort to convert the current complex stored procedure into Query Collection" vertex="1">
+          <mxGeometry height="60" width="200" x="750" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="en2" edge="1" parent="1" source="note2" style="endArrow=none;html=1;dashed=1;" target="sql_server" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_grp" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="150" width="200" x="20" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;arcSize=7;" value="" vertex="1">
+          <mxGeometry height="150" width="220" x="20" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;" value="MongoDB" vertex="1">
+          <mxGeometry height="30" width="30" x="70" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;" value="RDMS" vertex="1">
+          <mxGeometry height="30" width="30" x="70" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-1" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" target="group_main" value="">
+          <mxGeometry width="600" x="250" y="420" as="geometry">
+            <mxPoint x="250" y="420" as="sourcePoint" />
+            <mxPoint x="850" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-13" edge="1" parent="1" source="dapr_saga" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-14" connectable="0" parent="POtwoep_TA7_t_sbpA7k-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Consume Saga task&amp;nbsp;&lt;div&gt;or&lt;/div&gt;&lt;div&gt;&amp;nbsp;Publish Query Modal task&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0261" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-15" edge="1" parent="1" source="outbox_worker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.145;entryY=1;entryDx=0;entryDy=-4.35;entryPerimeter=0;" target="kafka">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-16" connectable="0" parent="POtwoep_TA7_t_sbpA7k-15" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Send Task Message" vertex="1">
+          <mxGeometry relative="1" x="-0.415" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-20" edge="1" parent="1" source="POtwoep_TA7_t_sbpA7k-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ssrs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-17" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;" value="OceanBase (Result Set)" vertex="1">
+          <mxGeometry height="80" width="80" x="920" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-19" edge="1" parent="1" source="sql_server" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;endArrow=none;endFill=0;" target="POtwoep_TA7_t_sbpA7k-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-21" edge="1" parent="1" source="dapr_saga" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="POtwoep_TA7_t_sbpA7k-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-22" edge="1" parent="1" source="group_main" style="endArrow=none;dashed=1;html=1;strokeWidth=1;rounded=0;entryX=1;entryY=0.464;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.001;exitY=0.469;exitDx=0;exitDy=0;exitPerimeter=0;" target="group_main" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="171" y="503" as="sourcePoint" />
+            <mxPoint x="1090.92" y="502.5999999999999" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-23" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DAE8FC;strokeColor=#006EAF;fontColor=#ffffff;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Services&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="30" x="160" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="POtwoep_TA7_t_sbpA7k-25" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#FFF2CC;strokeColor=#D6B656;fontColor=#ffffff;" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Application&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="30" x="160" y="95" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
