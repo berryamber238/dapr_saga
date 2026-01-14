@@ -1,4 +1,4 @@
-using DaprDemo.Shared.Repositories;
+using DaprSaga.Shared.Repositories;
 using MongoDB.Driver;
 using Saga.Coordinator.Services;
 using Saga.Coordinator.Configuration;
@@ -7,20 +7,29 @@ using Serilog;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using Saga.Coordinator.Models;
+using DaprSaga.Shared.Extensions; // Added
+using Nacos.AspNetCore.V2; // Added
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Nacos Config
+builder.AddNacosConfig(); // Added
+
+// Add Config Upload Service
+// builder.Services.AddHostedService<DaprSaga.Shared.Services.NacosConfigUploader>();
+
 
 // Register ObjectSerializer to allow serializing complex objects like TransactionRequest in EventData
 BsonSerializer.RegisterSerializer(new ObjectSerializer(type => 
     ObjectSerializer.DefaultAllowedTypes(type) || 
-    type.FullName.StartsWith("Saga.Coordinator.Models") ||
-    type.FullName.StartsWith("DaprDemo.Shared.Models")
+    (type.FullName?.StartsWith("Saga.Coordinator.Models") ?? false) ||
+    (type.FullName?.StartsWith("DaprSaga.Shared.Models") ?? false)
 ));
 
 // Explicitly register shared class maps to ensure discriminators match
-if (!BsonClassMap.IsClassMapRegistered(typeof(DaprDemo.Shared.Models.SharedTransactionRequest)))
+if (!BsonClassMap.IsClassMapRegistered(typeof(DaprSaga.Shared.Models.SharedTransactionRequest)))
 {
-    BsonClassMap.RegisterClassMap<DaprDemo.Shared.Models.SharedTransactionRequest>();
+    BsonClassMap.RegisterClassMap<DaprSaga.Shared.Models.SharedTransactionRequest>();
 }
 
 Log.Logger = new LoggerConfiguration()
@@ -34,6 +43,9 @@ builder.Services.Configure<RetryOptions>(builder.Configuration.GetSection("Retry
 builder.Services.AddControllers().AddDapr();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add Nacos Service Registration
+builder.Services.AddNacosService(builder.Configuration); // Added
 
 // Enable CORS
 builder.Services.AddCors(options =>
@@ -57,6 +69,8 @@ builder.Services.AddScoped<EventStoreRepository>();
 builder.Services.AddScoped<SagaTransactionRepository>();
 
 builder.Services.AddScoped<ISagaOrchestrator, SagaOrchestrator>();
+builder.Services.AddScoped<BuyInSagaOrchestrator>();
+builder.Services.AddScoped<CashOutSagaOrchestrator>();
 
 var app = builder.Build();
 

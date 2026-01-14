@@ -1,9 +1,13 @@
-using DaprDemo.Shared.Repositories;
+using DaprSaga.Shared.Repositories;
+using DaprSaga.Shared.Extensions; // Added
 using MongoDB.Driver;
 using Service.Query.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Nacos Config
+builder.AddNacosConfig(); // Added
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -14,6 +18,10 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers().AddDapr();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add Nacos Service Registration
+builder.Services.AddNacosService(builder.Configuration); // Added
+
 builder.Services.AddMemoryCache();
 
 // Enable CORS

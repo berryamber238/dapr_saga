@@ -1,6 +1,7 @@
 using Dapr;
 using Microsoft.AspNetCore.Mvc;
 using Saga.Coordinator.Services;
+using DaprSaga.Shared.Models;
 
 namespace Saga.Coordinator.Controllers;
 
@@ -9,10 +10,14 @@ namespace Saga.Coordinator.Controllers;
 public class SagaController : ControllerBase
 {
     private readonly ISagaOrchestrator _orchestrator;
+    private readonly BuyInSagaOrchestrator _buyInOrchestrator;
+    private readonly CashOutSagaOrchestrator _cashOutOrchestrator;
 
-    public SagaController(ISagaOrchestrator orchestrator)
+    public SagaController(ISagaOrchestrator orchestrator, BuyInSagaOrchestrator buyIn, CashOutSagaOrchestrator cashOut)
     {
         _orchestrator = orchestrator;
+        _buyInOrchestrator = buyIn;
+        _cashOutOrchestrator = cashOut;
     }
 
     [HttpPost("init")]
@@ -53,6 +58,30 @@ public class SagaController : ControllerBase
         }
 
         await _orchestrator.InitSagaAsync(request);
+        return Ok();
+    }
+
+    [Topic("pubsub", "saga-buyin")]
+    [HttpPost("buyin-handler")]
+    public async Task<IActionResult> HandleBuyInEvent([FromBody] SharedTransactionRequest request)
+    {
+        Console.WriteLine($"[Coordinator] Received Saga BuyIn Event for {request.TransactionId}");
+        var existing = await _orchestrator.GetSagaStateAsync(request.TransactionId);
+        if (existing != null) return Ok();
+
+        await _buyInOrchestrator.InitSagaAsync(request);
+        return Ok();
+    }
+
+    [Topic("pubsub", "saga-cashout")]
+    [HttpPost("cashout-handler")]
+    public async Task<IActionResult> HandleCashOutEvent([FromBody] SharedTransactionRequest request)
+    {
+        Console.WriteLine($"[Coordinator] Received Saga CashOut Event for {request.TransactionId}");
+        var existing = await _orchestrator.GetSagaStateAsync(request.TransactionId);
+        if (existing != null) return Ok();
+
+        await _cashOutOrchestrator.InitSagaAsync(request);
         return Ok();
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using System.Linq.Expressions;
 
-namespace DaprDemo.Shared.Repositories;
+namespace DaprSaga.Shared.Repositories;
 
 public interface IRepository<T> where T : class
 {

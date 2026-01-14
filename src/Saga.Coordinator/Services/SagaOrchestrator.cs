@@ -1,10 +1,12 @@
 using Dapr.Client;
-using DaprDemo.Shared.Models;
-using DaprDemo.Shared.Repositories;
+using DaprSaga.Shared.Models;
+using DaprSaga.Shared.Repositories;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Saga.Coordinator.Configuration;
 using Serilog;
+using Nacos.V2; // Added
+using System.Net.Http.Json; // Added
 
 namespace Saga.Coordinator.Services;
 
@@ -20,17 +22,21 @@ public class SagaOrchestrator : ISagaOrchestrator
     private readonly DaprClient _daprClient;
     private readonly SagaTransactionRepository _repository;
     private readonly RetryOptions _retryOptions;
+    private readonly INacosNamingService _nacosNamingService;
+    private readonly HttpClient _httpClient;
     
     // Service App IDs for Dapr Service Invocation
     private const string APP_CTA = "service-cta";
     private const string APP_GENESIS = "service-genesis";
     private const string APP_PERFECTCAGE = "service-perfectcage";
 
-    public SagaOrchestrator(DaprClient daprClient, SagaTransactionRepository repository, IOptions<RetryOptions> retryOptions)
+    public SagaOrchestrator(DaprClient daprClient, SagaTransactionRepository repository, IOptions<RetryOptions> retryOptions, INacosNamingService nacosNamingService, IHttpClientFactory httpClientFactory)
     {
         _daprClient = daprClient;
         _repository = repository;
         _retryOptions = retryOptions.Value;
+        _nacosNamingService = nacosNamingService;
+        _httpClient = httpClientFactory.CreateClient();
     }
 
     public async Task<string> InitSagaAsync(TransactionRequest request)
@@ -82,6 +88,28 @@ public class SagaOrchestrator : ISagaOrchestrator
 
         for (int i = 0; i < maxRetries; i++)
         {
+            // Try Nacos first
+            try
+            {
+                var instance = await _nacosNamingService.SelectOneHealthyInstance(appId, "public");
+                if (instance != null)
+                {
+                    var url = $"http://{instance.Ip}:{instance.Port}/{methodName}";
+                    var response = await _httpClient.PostAsJsonAsync(url, data);
+                    if (response.IsSuccessStatusCode) return true;
+                    Log.Warning($"[Coordinator] Nacos invocation failed for {url}: {response.StatusCode}");
+                }
+                else
+                {
+                    Log.Warning($"[Coordinator] No healthy instance found in Nacos for {appId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, $"[Coordinator] Error during Nacos invocation for {appId}");
+            }
+
+            // Fallback to Dapr if Nacos fails or no instance found
             try
             {
                 await _daprClient.InvokeMethodAsync(HttpMethod.Post, appId, methodName, data);
@@ -139,9 +167,9 @@ public class SagaOrchestrator : ISagaOrchestrator
              saga.Status = "Compensating";
              await TriggerCompensationAsync(saga);
         }
-        else if (saga.CompletedServices.Count >= 3 && !saga.FailedServices.Any() && saga.Status != "Completed")
+        else if (saga.CompletedServices.Count >= saga.ExpectedServices.Count && !saga.FailedServices.Any() && saga.Status != "Completed")
         {
-            // All 3 services (CTA, Genesis, PerfectCage) succeeded
+            // All expected services succeeded
             saga.Status = "Completed";
             Log.Information($"[Coordinator] Saga {saga.TransactionId} completed successfully.");
         }

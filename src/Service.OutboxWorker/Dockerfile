@@ -4,7 +4,7 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ["src/Service.OutboxWorker/Service.OutboxWorker.csproj", "src/Service.OutboxWorker/"]
-COPY ["src/DaprDemo.Shared/DaprDemo.Shared.csproj", "src/DaprDemo.Shared/"]
+COPY ["src/DaprSaga.Shared/DaprSaga.Shared.csproj", "src/DaprSaga.Shared/"]
 RUN dotnet restore "src/Service.OutboxWorker/Service.OutboxWorker.csproj"
 COPY . .
 WORKDIR "/src/src/Service.OutboxWorker"

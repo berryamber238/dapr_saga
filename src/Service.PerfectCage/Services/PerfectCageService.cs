@@ -1,6 +1,6 @@
 using Dapr.Client;
-using DaprDemo.Shared.Models;
-using DaprDemo.Shared.Repositories;
+using DaprSaga.Shared.Models;
+using DaprSaga.Shared.Repositories;
 using Serilog;
 
 namespace Service.PerfectCage.Services;

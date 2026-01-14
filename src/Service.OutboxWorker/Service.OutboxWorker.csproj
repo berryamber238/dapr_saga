@@ -14,6 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DaprDemo.Shared\DaprDemo.Shared.csproj" />
+    <ProjectReference Include="..\DaprSaga.Shared\DaprSaga.Shared.csproj" />
   </ItemGroup>
 </Project>

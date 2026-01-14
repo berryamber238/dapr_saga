@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Service.Genesis.Services;
+using DaprSaga.Shared.Models;
 
 namespace Service.Genesis.Controllers;
 
@@ -23,6 +24,20 @@ public class GenesisController : ControllerBase
 
     [HttpPost("transaction")]
     public async Task<IActionResult> Transaction([FromBody] TransactionRequest request)
+    {
+        var result = await _service.ProcessTransactionAsync(request.TransactionId, request.BusinessId, request.Payload);
+        return result ? Ok() : BadRequest();
+    }
+
+    [HttpPost("deposit")]
+    public async Task<IActionResult> Deposit([FromBody] SharedTransactionRequest request)
+    {
+        var result = await _service.ProcessTransactionAsync(request.TransactionId, request.BusinessId, request.Payload);
+        return result ? Ok() : BadRequest();
+    }
+
+    [HttpPost("withdraw")]
+    public async Task<IActionResult> Withdraw([FromBody] SharedTransactionRequest request)
     {
         var result = await _service.ProcessTransactionAsync(request.TransactionId, request.BusinessId, request.Payload);
         return result ? Ok() : BadRequest();

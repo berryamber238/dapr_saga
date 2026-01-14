@@ -6,7 +6,7 @@ mkdir -p logs
 # Set Environment to Development to enable Swagger
 export ASPNETCORE_ENVIRONMENT=Development
 
-echo "Starting Dapr Demo Services..."
+echo "Starting Dapr Saga Services..."
 
 # 1. Saga Coordinator (Port 5001, Dapr 3501/60001)
 echo "Starting Saga Coordinator..."
@@ -31,6 +31,10 @@ echo "Starting Service Query..."
 # 6. Service Notification (Port 5006, Dapr 3506/60006)
 echo "Starting Service Notification..."
 ./dapr run --app-id service-notification --app-port 5006 --dapr-http-port 3506 --dapr-grpc-port 60006 --resources-path ./components -- dotnet run --project src/Service.Notification/Service.Notification.csproj --urls "http://localhost:5006" --environment Development > logs/notification.log 2>&1 &
+
+# 7. Business Coordinator (Port 5007, Dapr 3507/60007)
+echo "Starting Business Coordinator..."
+./dapr run --app-id business-coordinator --app-port 5007 --dapr-http-port 3507 --dapr-grpc-port 60007 --resources-path ./components -- dotnet run --project src/BusinessCoordinator/BusinessCoordinator.csproj --urls "http://localhost:5007" --environment Development > logs/business.log 2>&1 &
 
 echo "All services started! Check logs/ directory for output."
 echo "Access Test Page at: http://localhost:5006/test-client.html (Wait... actually test page is a file, open it directly in browser)"

@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ["src/Service.Query/Service.Query.csproj", "src/Service.Query/"]
-COPY ["src/DaprDemo.Shared/DaprDemo.Shared.csproj", "src/DaprDemo.Shared/"]
+COPY ["src/DaprSaga.Shared/DaprSaga.Shared.csproj", "src/DaprSaga.Shared/"]
 RUN dotnet restore "src/Service.Query/Service.Query.csproj"
 COPY . .
 WORKDIR "/src/src/Service.Query"

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Coordinator Test Client</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 2rem; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+        .section { margin-bottom: 2rem; border: 1px solid #ddd; padding: 1.5rem; border-radius: 4px; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        input, select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .help-text { font-size: 0.85rem; color: #666; margin-top: 0.25rem; }
+        button { background-color: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
+        button:hover { background-color: #2980b9; }
+        pre { background: #272822; color: #f8f8f2; padding: 1rem; border-radius: 4px; overflow-x: auto; margin-top: 1rem; }
+        .status-box { padding: 1rem; margin-top: 1rem; border-radius: 4px; display: none; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        /* Saga Visualization */
+        .saga-status { margin-top: 1.5rem; }
+        .steps { display: flex; justify-content: space-between; margin-top: 1rem; position: relative; }
+        .steps::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: #eee; z-index: 0; }
+        .step { position: relative; z-index: 1; text-align: center; width: 20%; }
+        .step-circle { width: 30px; height: 30px; background: #eee; border-radius: 50%; margin: 0 auto 0.5rem; line-height: 30px; color: #777; font-weight: bold; border: 2px solid #fff; }
+        .step.active .step-circle { background: #3498db; color: white; }
+        .step.completed .step-circle { background: #28a745; color: white; }
+        .step.failed .step-circle { background: #dc3545; color: white; }
+        .step-label { font-size: 0.85rem; color: #555; }
+        
+        .history-list { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; }
+        .history-item { padding: 0.75rem; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+        .history-item:hover { background-color: #f9f9f9; }
+        .history-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Business Coordinator Test Client</h1>
+        
+        <div class="section">
+            <h2>Start New Transaction</h2>
+            <div class="form-group">
+                <label for="transactionType">Transaction Type</label>
+                <select id="transactionType" onchange="toggleFormFields()">
+                    <option value="buy-in">Buy In</option>
+                    <option value="cash-out">Cash Out</option>
+                </select>
+            </div>
+
+            <!-- Buy In Form Fields -->
+            <div id="buyInFields">
+                <div class="form-group">
+                    <label for="inputTypes">Input Types (Comma separated)</label>
+                    <input type="text" id="inputTypes" value="cash" placeholder="e.g. cash, credit_card">
+                    <div class="help-text">Valid types: cash, credit_card, front_money</div>
+                </div>
+                <div class="form-group">
+                    <label for="inputAmount">Input Amount</label>
+                    <input type="number" id="inputAmount" value="100" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="outputTypes">Output Types (Comma separated)</label>
+                    <input type="text" id="outputTypes" value="LPG" placeholder="e.g. LPG, NN, CC">
+                    <div class="help-text">Valid chips: LPG, NN, CC</div>
+                </div>
+                <div class="form-group">
+                    <label for="outputAmount">Output Amount</label>
+                    <input type="number" id="outputAmount" value="100" step="0.01">
+                </div>
+            </div>
+
+            <!-- Cash Out Form Fields (Legacy for now) -->
+            <div id="cashOutFields" style="display:none;">
+                <div class="form-group">
+                    <label for="coInputType">Input Type</label>
+                    <input type="text" id="coInputType" value="chips">
+                </div>
+                <div class="form-group">
+                    <label for="coAmount">Amount</label>
+                    <input type="number" id="coAmount" value="100" step="0.01">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="currency">Currency</label>
+                <input type="text" id="currency" value="HKD">
+            </div>
+
+            <button onclick="submitTransaction()" id="submitBtn">Submit Transaction</button>
+        </div>
+
+        <div class="section" id="visualizationSection" style="display:none;">
+            <h3>Saga Execution Status</h3>
+            <div id="statusBox" class="status-box"></div>
+            
+            <div class="saga-status">
+                <div class="steps">
+                    <div class="step" id="step-init">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Initialized</div>
+                    </div>
+                    <div class="step" id="step-cta">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">CTA Service</div>
+                    </div>
+                    <div class="step" id="step-genesis">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Genesis Service</div>
+                    </div>
+                    <div class="step" id="step-complete">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem;">
+                <h4>Transaction Details</h4>
+                <pre id="responseJson">Waiting for transaction...</pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Transaction History</h3>
+            <ul id="historyList" class="history-list">
+                <li class="history-item" style="color: #777; justify-content: center;">No history yet</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5007/api/business';
+        let pollInterval;
+
+        function toggleFormFields() {
+            const type = document.getElementById('transactionType').value;
+            if (type === 'buy-in') {
+                document.getElementById('buyInFields').style.display = 'block';
+                document.getElementById('cashOutFields').style.display = 'none';
+            } else {
+                document.getElementById('buyInFields').style.display = 'none';
+                document.getElementById('cashOutFields').style.display = 'block';
+            }
+        }
+
+        async function submitTransaction() {
+            const type = document.getElementById('transactionType').value;
+            const currency = document.getElementById('currency').value;
+            let payload = {};
+
+            if (type === 'buy-in') {
+                const inTypes = document.getElementById('inputTypes').value.split(',').map(s => s.trim()).filter(s => s);
+                const outTypes = document.getElementById('outputTypes').value.split(',').map(s => s.trim()).filter(s => s);
+                const inAmount = parseFloat(document.getElementById('inputAmount').value);
+                const outAmount = parseFloat(document.getElementById('outputAmount').value);
+
+                if (inAmount !== outAmount) {
+                    alert("Input Amount must match Output Amount for balance!");
+                    return;
+                }
+
+                payload = {
+                    input: {
+                        inputType: inTypes,
+                        inputAmount: inAmount
+                    },
+                    output: {
+                        outputType: outTypes,
+                        outputAmount: outAmount
+                    },
+                    currency: currency
+                };
+            } else {
+                payload = {
+                    inputType: document.getElementById('coInputType').value,
+                    amount: parseFloat(document.getElementById('coAmount').value),
+                    currency: currency
+                };
+            }
+
+            // UI Updates
+            const visSection = document.getElementById('visualizationSection');
+            const statusBox = document.getElementById('statusBox');
+            const responseJson = document.getElementById('responseJson');
+            const submitBtn = document.getElementById('submitBtn');
+
+            visSection.style.display = 'block';
+            statusBox.style.display = 'block';
+            statusBox.className = 'status-box info';
+            statusBox.textContent = 'Submitting transaction...';
+            submitBtn.disabled = true;
+            resetSteps();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusBox.className = 'status-box success';
+                    statusBox.textContent = `Transaction Accepted. ID: ${data.transactionId}. Tracking status...`;
+                    responseJson.textContent = JSON.stringify(data, null, 2);
+                    
+                    // Mark Init Step
+                    updateStep('step-init', 'completed');
+                    
+                    // Add to history
+                    addToHistory(data.transactionId, type, new Date().toLocaleTimeString());
+
+                    // Start Polling for Status (Simulation for now as we don't have status API exposed yet)
+                    // In a real app, we would poll a Query Service endpoint
+                    simulateSagaProgress(payload);
+
+                } else {
+                    throw new Error(`${response.status} ${response.statusText}`);
+                }
+
+            } catch (error) {
+                statusBox.className = 'status-box error';
+                statusBox.textContent = `Submission Failed: ${error.message}`;
+                responseJson.textContent = JSON.stringify(payload, null, 2);
+                updateStep('step-init', 'failed');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        function resetSteps() {
+            ['step-init', 'step-cta', 'step-genesis', 'step-complete'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = 'step';
+            });
+        }
+
+        function updateStep(id, status) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add(status);
+        }
+
+        function addToHistory(id, type, time) {
+            const list = document.getElementById('historyList');
+            if (list.children[0].textContent === 'No history yet') list.innerHTML = '';
+            
+            const item = document.createElement('li');
+            item.className = 'history-item';
+            item.innerHTML = `<span><strong>${type.toUpperCase()}</strong> - ${id}</span> <span>${time}</span>`;
+            item.onclick = () => alert(`Details for ${id}`);
+            list.insertBefore(item, list.firstChild);
+        }
+
+        // Mock simulation of Saga progress since we don't have a real-time status WebSocket yet
+        function simulateSagaProgress(payload) {
+            // Logic mirrors Orchestrator:
+            // If Cash(HKD) -> CTA only
+            // Else -> CTA + Genesis
+            
+            let isCash = false;
+            if (payload.input && payload.input.inputType) {
+                isCash = payload.input.inputType.some(t => t.toLowerCase() === 'cash' || t.toLowerCase() === 'front_money');
+            }
+            const isHKD = payload.currency === 'HKD';
+            
+            setTimeout(() => {
+                updateStep('step-cta', 'active');
+                setTimeout(() => {
+                    updateStep('step-cta', 'completed');
+                    
+                    if (!isHKD || !isCash) {
+                        setTimeout(() => {
+                            updateStep('step-genesis', 'active');
+                            setTimeout(() => {
+                                updateStep('step-genesis', 'completed');
+                                finishSaga();
+                            }, 1500);
+                        }, 500);
+                    } else {
+                        finishSaga();
+                    }
+                }, 1500);
+            }, 1000);
+        }
+
+        function finishSaga() {
+            updateStep('step-complete', 'completed');
+            const sb = document.getElementById('statusBox');
+            sb.textContent = 'Transaction Saga Completed Successfully!';
+        }
+    </script>
+</body>
+</html>

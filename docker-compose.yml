@@ -71,7 +71,8 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=DaprDemoDB
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
     depends_on:
       mongodb:
         condition: service_started
@@ -114,7 +115,8 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=DaprDemoDB
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
     depends_on:
       mongodb:
         condition: service_started
@@ -141,6 +143,7 @@ services:
     depends_on:
       - service-cta
     network_mode: "service:service-cta"
+    restart: always
 
   # 3. Service Genesis
   service-genesis:
@@ -152,7 +155,8 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=DaprDemoDB
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
     depends_on:
       mongodb:
         condition: service_started
@@ -179,6 +183,7 @@ services:
     depends_on:
       - service-genesis
     network_mode: "service:service-genesis"
+    restart: always
 
   # 4. Service PerfectCage
   service-perfectcage:
@@ -190,7 +195,8 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=DaprDemoDB
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
     depends_on:
       mongodb:
         condition: service_started
@@ -217,6 +223,7 @@ services:
     depends_on:
       - service-perfectcage
     network_mode: "service:service-perfectcage"
+    restart: always
 
   # 5. Service Query
   service-query:
@@ -228,7 +235,8 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=DaprDemoDB
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
     depends_on:
       mongodb:
         condition: service_started
@@ -255,6 +263,7 @@ services:
     depends_on:
       - service-query
     network_mode: "service:service-query"
+    restart: always
 
   # 6. Service Notification
   service-notification:
@@ -266,7 +275,8 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=DaprDemoDB
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
     depends_on:
       mongodb:
         condition: service_started
@@ -293,6 +303,7 @@ services:
     depends_on:
       - service-notification
     network_mode: "service:service-notification"
+    restart: always
 
   # 7. Service OutboxWorker
   service-outbox-worker:
@@ -301,7 +312,8 @@ services:
       dockerfile: src/Service.OutboxWorker/Dockerfile
     environment:
       - MongoDB__ConnectionString=mongodb://mongodb:27017
-      - MongoDB__DatabaseName=DaprDemoDB
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
     depends_on:
       mongodb:
         condition: service_started
@@ -326,6 +338,63 @@ services:
     depends_on:
       - service-outbox-worker
     network_mode: "service:service-outbox-worker"
+    restart: always
+
+  # 8. Business Coordinator
+  business-coordinator:
+    build:
+      context: .
+      dockerfile: src/BusinessCoordinator/Dockerfile
+    ports:
+      - "5007:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=DaprSagaDB
+      - nacos__ServerAddresses__0=http://nacos:8848
+    depends_on:
+      mongodb:
+        condition: service_started
+      placement:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    restart: always
+    networks:
+      - dapr-network
+
+  business-coordinator-dapr:
+    image: daprio/daprd:1.16.5
+    command: ["./daprd", 
+      "-app-id", "business-coordinator", 
+      "-app-port", "8080", 
+      "-placement-host-address", "placement:50005", 
+      "-scheduler-host-address", "scheduler:50006",
+      "-components-path", "/components",
+      "-config", "/components/configuration.yaml"
+    ]
+    volumes:
+      - ./docker-components/:/components
+    depends_on:
+      - business-coordinator
+    network_mode: "service:business-coordinator"
+    restart: always
+
+  # 9. Nacos Server
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    container_name: nacos-standalone
+    environment:
+      - MODE=standalone
+      - JVM_XMS=256m
+      - JVM_XMX=256m
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    networks:
+      - dapr-network
     restart: always
 
 networks:

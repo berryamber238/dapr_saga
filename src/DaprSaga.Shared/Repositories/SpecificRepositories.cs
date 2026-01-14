@@ -1,9 +1,9 @@
 using Dapr.Client;
-using DaprDemo.Shared.Models;
+using DaprSaga.Shared.Models;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 
-namespace DaprDemo.Shared.Repositories;
+namespace DaprSaga.Shared.Repositories;
 
 public class SagaTransactionRepository : MongoBaseRepository<SagaTransaction>
 {

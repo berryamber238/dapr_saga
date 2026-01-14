@@ -3,20 +3,24 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Service.OutboxWorker;
+using DaprSaga.Shared.Extensions; // Added
 
 var builder = Host.CreateApplicationBuilder(args);
+
+// Add Nacos Config
+builder.Configuration.AddNacosConfig(builder.Configuration); // Added
 
 // Register ObjectSerializer to handle dynamic/complex payloads in OutboxMessage
 BsonSerializer.RegisterSerializer(new ObjectSerializer(type => 
     ObjectSerializer.DefaultAllowedTypes(type) || 
     type.FullName.StartsWith("Saga.Coordinator.Models") ||
-    type.FullName.StartsWith("DaprDemo.Shared.Models")
+    type.FullName.StartsWith("DaprSaga.Shared.Models")
 ));
 
 // Explicitly register shared class maps to ensure discriminators match
-if (!BsonClassMap.IsClassMapRegistered(typeof(DaprDemo.Shared.Models.SharedTransactionRequest)))
+if (!BsonClassMap.IsClassMapRegistered(typeof(DaprSaga.Shared.Models.SharedTransactionRequest)))
 {
-    BsonClassMap.RegisterClassMap<DaprDemo.Shared.Models.SharedTransactionRequest>();
+    BsonClassMap.RegisterClassMap<DaprSaga.Shared.Models.SharedTransactionRequest>();
 }
 
 builder.Services.AddSingleton<DaprClient>(new DaprClientBuilder().Build());

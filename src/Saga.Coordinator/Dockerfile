@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ["src/Saga.Coordinator/Saga.Coordinator.csproj", "src/Saga.Coordinator/"]
-COPY ["src/DaprDemo.Shared/DaprDemo.Shared.csproj", "src/DaprDemo.Shared/"]
+COPY ["src/DaprSaga.Shared/DaprSaga.Shared.csproj", "src/DaprSaga.Shared/"]
 RUN dotnet restore "src/Saga.Coordinator/Saga.Coordinator.csproj"
 COPY . .
 WORKDIR "/src/src/Saga.Coordinator"

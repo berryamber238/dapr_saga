@@ -1,7 +1,7 @@
 @echo off
 if not exist logs mkdir logs
 
-echo Starting Dapr Demo Services...
+echo Starting Dapr Saga Services...
 
 echo Starting Saga Coordinator...
 start /B dapr run --app-id saga-coordinator --app-port 5001 --dapr-http-port 3501 --dapr-grpc-port 50001 --components-path ./components -- dotnet run --project src/Saga.Coordinator/Saga.Coordinator.csproj --urls "http://localhost:5001" > logs/coordinator.log 2>&1
@@ -20,5 +20,8 @@ start /B dapr run --app-id service-query --app-port 5005 --dapr-http-port 3505 -
 
 echo Starting Service Notification...
 start /B dapr run --app-id service-notification --app-port 5006 --dapr-http-port 3506 --dapr-grpc-port 50006 --components-path ./components -- dotnet run --project src/Service.Notification/Service.Notification.csproj --urls "http://localhost:5006" > logs/notification.log 2>&1
+
+echo Starting Business Coordinator...
+start /B dapr run --app-id business-coordinator --app-port 5007 --dapr-http-port 3507 --dapr-grpc-port 50007 --components-path ./components -- dotnet run --project src/BusinessCoordinator/BusinessCoordinator.csproj --urls "http://localhost:5007" > logs/business.log 2>&1
 
 echo All services started! Check logs/ directory for output.
