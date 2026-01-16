@@ -1,0 +1,21 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: rabbitmq-binding
+  namespace: cage
+spec:
+  type: bindings.rabbitmq
+  version: v1
+  metadata:
+  - name: queueName
+    value: "outbox-queue"
+  - name: exchangeName
+    value: "outbox-exchange"
+  - name: host
+    secretKeyRef:
+      name: rabbitmq-secret
+      key: connectionString
+  - name: durable
+    value: "true"
+  - name: deleteWhenUnused
+    value: "false"

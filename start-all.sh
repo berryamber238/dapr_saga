@@ -6,6 +6,25 @@ mkdir -p logs
 # Set Environment to Development to enable Swagger
 export ASPNETCORE_ENVIRONMENT=Development
 
+# ----------------------------------------------------------------
+# Environment Variable Injection for Dapr Components
+# ----------------------------------------------------------------
+# Set default values for local development if not already set
+export RABBITMQ_HOST=${RABBITMQ_HOST:-localhost}
+export RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+export RABBITMQ_USER=${RABBITMQ_USER:-guest}
+export RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+
+# Validate Configuration
+echo "Validating Environment Configuration..."
+bash scripts/validate-config.sh
+if [ $? -ne 0 ]; then
+    echo "❌ Start-up aborted due to configuration errors."
+    exit 1
+fi
+echo "✅ Configuration Validated."
+# ----------------------------------------------------------------
+
 echo "Starting Dapr Saga Services..."
 
 # 1. Saga Coordinator (Port 5001, Dapr 3501/60001)
@@ -37,5 +56,5 @@ echo "Starting Business Coordinator..."
 ./dapr run --app-id business-coordinator --app-port 5007 --dapr-http-port 3507 --dapr-grpc-port 60007 --resources-path ./components -- dotnet run --project src/BusinessCoordinator/BusinessCoordinator.csproj --urls "http://localhost:5007" --environment Development > logs/business.log 2>&1 &
 
 echo "All services started! Check logs/ directory for output."
-echo "Access Test Page at: http://localhost:5006/test-client.html (Wait... actually test page is a file, open it directly in browser)"
+echo "Access Test Page at: http://localhost:5006/test-client.html"
 echo "Or use Query Service Swagger: http://localhost:5005/swagger"

@@ -1,0 +1,62 @@
+pipeline {
+  agent {
+    node {
+      label 'base'
+    }
+  }
+  environment {
+    SOURCE_REPO          = 'https://github.com/berryamber238/dapr_saga.git'
+    SOURCE_CREDENTIAL_ID = 'wynncage-azure'
+    DEPLOY_REPO          = 'github.com/berryamber238/dapr_saga.git'
+    DEPLOY_CREDENTIAL_ID = 'wynncage-azure'
+    DEPLOY_PATH          = 'k8s-deploy/service-query'
+    DOCKER_REPO          = 'harbor.maclab.wynnmacau.com/cage/service-query'
+    DOCKER_CREDENTIAL_ID = 'harbor-robot'
+  }
+  stages {
+    stage('git clone') {
+      steps {
+        git(branch: 'main', credentialsId: "${SOURCE_CREDENTIAL_ID}", url: "${SOURCE_REPO}")
+        script {
+            env.COMMIT_ID = sh(script: 'git rev-parse --short=8 HEAD',
+                                returnStdout: true).trim()
+            echo "commit id: ${COMMIT_ID}"
+        }
+      }
+    }
+    stage('build & push') {
+      steps {
+        container('base') {
+          withCredentials([usernamePassword(passwordVariable:'PASS',usernameVariable:'USER',credentialsId:"${DOCKER_CREDENTIAL_ID}")]) {
+            sh 'docker login ${DOCKER_REPO} -u $USER -p $PASS --tls-verify=false'
+            sh 'docker build -f src/Service.Query/Dockerfile -t ${DOCKER_REPO}:${COMMIT_ID} --tls-verify=false .'
+            sh 'docker push ${DOCKER_REPO}:${COMMIT_ID} --tls-verify=false'
+          }
+        }
+      }
+    }
+    stage('update manifest') {
+      environment {
+        DOCKER_TAG = "${COMMIT_ID}"
+      }
+      steps {
+        container('base'){
+          dir('update') {
+            git(branch: "main", url: "https://${DEPLOY_REPO}", credentialsId: "${DEPLOY_CREDENTIAL_ID}")
+            sh 'sed -i "s|image:.*|image: ${DOCKER_REPO}:${DOCKER_TAG}|" ${DEPLOY_PATH}/deployment.yaml'
+            withCredentials([usernamePassword(passwordVariable:'PASS', usernameVariable:'USER', credentialsId:"${DEPLOY_CREDENTIAL_ID}")]) {
+            sh '''
+              git config --global --add safe.directory "$(pwd)"
+              git config user.name "robot"
+              git config user.email "robot@bw.com"
+              git add .
+              git commit -m "Bump image with ${DOCKER_REPO}:${DOCKER_TAG}"
+              git push "https://${USER}:${PASS}@${DEPLOY_REPO}"
+            '''
+            }
+          }
+        }
+      }
+    }
+  }
+}

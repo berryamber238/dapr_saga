@@ -6,15 +6,16 @@ spec:
   type: pubsub.rabbitmq
   version: v1
   metadata:
-  - name: connectionString
-    value: "amqp://guest:guest@rabbitmq:5672"
-  - name: durable
-    value: "true"
-  - name: deletedWhenUnused
-    value: "false"
-  - name: autoAck
-    value: "false"
-  - name: deliveryMode
-    value: "2"
-  - name: requeueInFailure
-    value: "true"
+    # RabbitMQ connection string using environment variables
+    - name: connectionString
+      value: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}"
+    - name: durable
+      value: "true"
+    - name: deletedWhenUnused
+      value: "false"
+    - name: autoAck
+      value: "false"
+    - name: deliveryMode
+      value: "2"
+    - name: requeueInFailure
+      value: "true"

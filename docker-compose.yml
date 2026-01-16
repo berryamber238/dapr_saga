@@ -100,6 +100,11 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment: &dapr-env
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
     depends_on:
       - saga-coordinator
     network_mode: "service:saga-coordinator"
@@ -140,6 +145,8 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment:
+      <<: *dapr-env
     depends_on:
       - service-cta
     network_mode: "service:service-cta"
@@ -180,6 +187,8 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment:
+      <<: *dapr-env
     depends_on:
       - service-genesis
     network_mode: "service:service-genesis"
@@ -220,6 +229,8 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment:
+      <<: *dapr-env
     depends_on:
       - service-perfectcage
     network_mode: "service:service-perfectcage"
@@ -260,6 +271,8 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment:
+      <<: *dapr-env
     depends_on:
       - service-query
     network_mode: "service:service-query"
@@ -300,6 +313,8 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment:
+      <<: *dapr-env
     depends_on:
       - service-notification
     network_mode: "service:service-notification"
@@ -335,6 +350,8 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment:
+      <<: *dapr-env
     depends_on:
       - service-outbox-worker
     network_mode: "service:service-outbox-worker"
@@ -377,6 +394,8 @@ services:
     ]
     volumes:
       - ./docker-components/:/components
+    environment:
+      <<: *dapr-env
     depends_on:
       - business-coordinator
     network_mode: "service:business-coordinator"

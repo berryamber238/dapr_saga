@@ -1,24 +1,63 @@
 #!/bin/bash
 
-# Nacos Server Address (Localhost for running from host machine)
+# Usage: ./upload-nacos-config.sh [dev|qa|prod]
+ENV=${1:-dev}
+ENV=$(echo "$ENV" | tr '[:upper:]' '[:lower:]')
+
+# Nacos Server Address
 NACOS_URL="http://localhost:8848"
 GROUP="DEFAULT_GROUP"
 
+# Define Namespaces and Log Levels based on Environment
+case $ENV in
+  dev)
+    NAMESPACE="DEV_NAMESPACE"
+    LOG_LEVEL="Debug"
+    ;;
+  qa)
+    NAMESPACE="QA_NAMESPACE"
+    LOG_LEVEL="Information"
+    ;;
+  prod)
+    NAMESPACE="PROD_NAMESPACE"
+    LOG_LEVEL="Warning"
+    ;;
+  *)
+    echo "Invalid environment: $ENV. Use dev, qa, or prod."
+    exit 1
+    ;;
+esac
+
 echo "=========================================="
 echo "Starting Nacos Configuration Upload"
-echo "Target Server: $NACOS_URL"
+echo "Environment: $ENV"
+echo "Namespace:   $NAMESPACE"
+echo "Log Level:   $LOG_LEVEL"
+echo "Target:      $NACOS_URL"
 echo "=========================================="
+
+# Create Namespace (Idempotent-ish check)
+echo "Creating Namespace $NAMESPACE..."
+curl -s -X POST "$NACOS_URL/nacos/v1/console/namespaces" \
+    -d "customNamespaceId=$NAMESPACE" \
+    -d "namespaceName=$NAMESPACE" \
+    -d "namespaceDesc=Namespace for $ENV environment"
+echo -e "\nNamespace creation request sent."
 
 # Function to publish config
 publish_config() {
-    local data_id=$1
+    local service_name=$1
     local content=$2
     
-    echo "Uploading $data_id..."
+    # Data ID convention: service-name-env.json
+    local data_id="${service_name}-${ENV}.json"
+    
+    echo "Uploading $data_id to namespace $NAMESPACE..."
     
     response=$(curl -s -X POST "$NACOS_URL/nacos/v1/cs/configs" \
         -d "dataId=$data_id" \
         -d "group=$GROUP" \
+        -d "tenant=$NAMESPACE" \
         -d "content=$content" \
         -d "type=json")
 
@@ -31,7 +70,6 @@ publish_config() {
 }
 
 # 1. Saga Coordinator
-# Contains RetryPolicy
 CONTENT_SAGA='{
   "RetryPolicy": {
     "MaxRetries": 3,
@@ -39,109 +77,110 @@ CONTENT_SAGA='{
   },
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "saga-coordinator.json" "$CONTENT_SAGA"
+publish_config "saga-coordinator" "$CONTENT_SAGA"
 
 # 2. Business Coordinator
 CONTENT_BUSINESS='{
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "business-coordinator.json" "$CONTENT_BUSINESS"
+publish_config "business-coordinator" "$CONTENT_BUSINESS"
 
 # 3. Service CTA
 CONTENT_CTA='{
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "service-cta.json" "$CONTENT_CTA"
+publish_config "service-cta" "$CONTENT_CTA"
 
 # 4. Service Genesis
 CONTENT_GENESIS='{
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "service-genesis.json" "$CONTENT_GENESIS"
+publish_config "service-genesis" "$CONTENT_GENESIS"
 
 # 5. Service PerfectCage
 CONTENT_PERFECTCAGE='{
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "service-perfectcage.json" "$CONTENT_PERFECTCAGE"
+publish_config "service-perfectcage" "$CONTENT_PERFECTCAGE"
 
 # 6. Service Query
 CONTENT_QUERY='{
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "service-query.json" "$CONTENT_QUERY"
+publish_config "service-query" "$CONTENT_QUERY"
 
 # 7. Service Notification
 CONTENT_NOTIFICATION='{
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "service-notification.json" "$CONTENT_NOTIFICATION"
+publish_config "service-notification" "$CONTENT_NOTIFICATION"
 
 # 8. Service OutboxWorker
 CONTENT_OUTBOX='{
   "Logging": {
     "LogLevel": {
-      "Default": "Information",
+      "Default": "'$LOG_LEVEL'",
       "Microsoft": "Warning",
       "Microsoft.Hosting.Lifetime": "Information"
     }
   }
 }'
-publish_config "service-outbox-worker.json" "$CONTENT_OUTBOX"
+publish_config "service-outbox-worker" "$CONTENT_OUTBOX"
 
-# 9. Shared Configuration (MongoDB)
-# Note: For Docker environment, the host is 'mongodb', not 'localhost'
+# 9. Shared Configuration
+# Note: Hostnames might differ per env, here we use defaults or inject vars if needed
+# For now we assume consistent internal DNS or override via other means
 CONTENT_SHARED='{
   "MongoDB": {
     "ConnectionString": "mongodb://mongodb:27017",
     "DatabaseName": "DaprSagaDB"
   }
 }'
-publish_config "shared-config.json" "$CONTENT_SHARED"
+publish_config "shared-config" "$CONTENT_SHARED"
 
 echo "=========================================="
-echo "Upload Complete!"
-echo "You can verify at $NACOS_URL/nacos"
+echo "Upload Complete for $ENV!"
+echo "Verify at $NACOS_URL/nacos (Namespace: $NAMESPACE)"
 echo "=========================================="
