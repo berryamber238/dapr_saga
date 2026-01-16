@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: service-query
-        image: harbor.maclab.wynnmacau.com/cage/service-query:latest
+        image: harbor.boardware.com/cage/service-query:371f5a32
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
