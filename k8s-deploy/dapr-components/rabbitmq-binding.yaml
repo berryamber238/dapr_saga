@@ -13,8 +13,8 @@ spec:
     value: "outbox-exchange"
   - name: host
     secretKeyRef:
-      name: rabbitmq-secret
-      key: connectionString
+      name: cage-secrets
+      key: rabbitmq-connection-string
   - name: durable
     value: "true"
   - name: deleteWhenUnused

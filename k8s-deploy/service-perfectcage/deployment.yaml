@@ -32,11 +32,21 @@ spec:
         - name: ASPNETCORE_URLS
           value: "http://+:8080"
         - name: MongoDB__ConnectionString
-          value: "mongodb://mongodb:27017"
+          valueFrom:
+            secretKeyRef:
+              name: cage-secrets
+              key: mongodb-connection-string
         - name: MongoDB__DatabaseName
-          value: "DaprSagaDB"
+          value: "cage"
         - name: nacos__ServerAddresses__0
-          value: "http://nacos:8848"
+          value: "http://172.19.201.142:30080/"
+        - name: nacos__UserName
+          value: "nacos"
+        - name: nacos__Password
+          valueFrom:
+            secretKeyRef:
+              name: cage-secrets
+              key: nacos-password
         resources:
           requests:
             cpu: "100m"
