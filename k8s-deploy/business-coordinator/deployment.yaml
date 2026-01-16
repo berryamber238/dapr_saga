@@ -24,8 +24,6 @@ spec:
       - name: business-coordinator
         image: harbor.boardware.com/cage/business-coordinator:1c1aa0cb
         imagePullPolicy: IfNotPresent
-        imagePullSecrets:
-        - name: harbor-secret
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -70,3 +68,5 @@ spec:
             scheme: HTTP
           initialDelaySeconds: 5
           periodSeconds: 5
+      imagePullSecrets:
+      - name: harbor-secret
