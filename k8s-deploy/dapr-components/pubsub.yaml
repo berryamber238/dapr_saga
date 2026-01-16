@@ -9,8 +9,8 @@ spec:
   metadata:
   - name: connectionString
     secretKeyRef:
-      name: rabbitmq-secret
-      key: connectionString
+      name: cage-secrets
+      key: rabbitmq-connection-string
   - name: durable
     value: "true"
   - name: deletedWhenUnused

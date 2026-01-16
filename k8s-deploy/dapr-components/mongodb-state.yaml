@@ -8,8 +8,14 @@ spec:
   version: v1
   metadata:
   - name: host
-    value: "mongodb.cage.svc.cluster.local:27017"
+    value: "172.19.201.142:30017"
   - name: databaseName
-    value: "DaprSagaDB"
+    value: "cage"
   - name: collectionName
     value: "sagaStates"
+  - name: username
+    value: "cage"
+  - name: password
+    secretKeyRef:
+      name: cage-secrets
+      key: mongodb-password
