@@ -33,6 +33,8 @@ spec:
           value: "cage"
         - name: nacos__ServerAddresses__0
           value: "http://172.19.201.142:30080/"
+        - name: nacos__ContextPath
+          value: ""
         - name: nacos__UserName
           value: "nacos"
         - name: nacos__Password
