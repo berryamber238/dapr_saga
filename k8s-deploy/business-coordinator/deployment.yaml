@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: business-coordinator
-        image: harbor.boardware.com/cage/business-coordinator:1c1aa0cb
+        image: harbor.boardware.com/cage/business-coordinator:b61503f4
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
